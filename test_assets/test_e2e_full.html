@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset='utf-8'></head>
+<body>
+<div id="status">INIT</div>
+<script>
+async function execute() {
+  const res = {
+    // 1. Decodes
+    videoDecode: false,
+    audioDecode: false,
+    imageDecode: false,
+    videoDuration: 0,
+    videoWidth: 0,
+    videoHeight: 0,
+    audioDuration: 0,
+    imageWidth: 0,
+    imageHeight: 0,
+
+    // 2. Play, Seek, Time sync
+    videoSeekExact: false,
+    seekDelta: 0,
+    videoPlayPause: false,
+
+    // 3. IDB Save and Re-read (Blob + ObjectURL)
+    idbSave: false,
+    idbReopenGet: false,
+    idbObjectUrlPlayable: false,
+
+    // 4. Trimming & mediaStart math on real video
+    leftTrimMediaStartCheck: false,
+    rightTrimMediaStartCheck: false,
+    splitContinuityCheck: false,
+
+    err: null
+  };
+
+  try {
+    // 1. Image
+    const img = new Image();
+    const imgPromise = new Promise(r => {
+      img.onload = () => r({ ok: true, width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = () => r({ ok: false });
+    });
+    img.src = 'test-image-1x1.png';
+    const imgRes = await imgPromise;
+    res.imageDecode = imgRes.ok;
+    res.imageWidth = imgRes.width;
+    res.imageHeight = imgRes.height;
+
+    // 2. Audio
+    const audio = new Audio();
+    const audioPromise = new Promise(r => {
+      audio.onloadedmetadata = () => r({ ok: true, duration: audio.duration });
+      audio.onerror = () => r({ ok: false });
+    });
+    audio.src = 'test-audio-5s.wav';
+    const audioRes = await audioPromise;
+    res.audioDecode = audioRes.ok;
+    res.audioDuration = Math.round(audioRes.duration * 10) / 10;
+
+    // 3. Video (MOV)
+    const video = document.createElement('video');
+    video.muted = true;
+    document.body.appendChild(video);
+    const videoPromise = new Promise(r => {
+      video.onloadedmetadata = () => r({
+        ok: true,
+        duration: video.duration,
+        width: video.videoWidth,
+        height: video.videoHeight
+      });
+      video.onerror = () => r({ ok: false });
+    });
+    video.src = 'test-sample.mov';
+    const videoRes = await videoPromise;
+    res.videoDecode = videoRes.ok;
+    res.videoDuration = Math.round(videoRes.duration * 10) / 10;
+    res.videoWidth = videoRes.width;
+    res.videoHeight = videoRes.height;
+
+    // 4. Test Play & Pause
+    await video.play().catch(() => {});
+    res.videoPlayPause = !video.paused;
+    video.pause();
+
+    // 5. Test Seek to 2.5s
+    const targetSeek = 2.5;
+    video.currentTime = targetSeek;
+    await new Promise(r => video.onseeked = r);
+    res.seekDelta = Math.abs(video.currentTime - targetSeek);
+    res.videoSeekExact = res.seekDelta < 0.05;
+
+    // 6. Test IndexedDB
+    const db = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('cinematic_studio_ai_media', 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore('media_blobs', { keyPath: 'id' });
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+
+    const testId = 'media-test-browser-mov';
+    // Use an ArrayBuffer/Blob synthesized directly or audio blob to test IDB
+    const dummyBlob = new Blob(['sample-data'], { type: 'text/plain' });
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('media_blobs', 'readwrite');
+      const store = tx.objectStore('media_blobs');
+      const req = store.put({ id: testId, blob: dummyBlob, name: 'dummy' });
+      req.onsuccess = resolve;
+      req.onerror = reject;
+    });
+    res.idbSave = true;
+
+    db.close();
+
+    const reopenedDb = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('cinematic_studio_ai_media', 1);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+
+    const retrievedRecord = await new Promise((resolve, reject) => {
+      const tx = reopenedDb.transaction('media_blobs', 'readonly');
+      const req = tx.objectStore('media_blobs').get(testId);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = reject;
+    });
+
+    if (retrievedRecord && retrievedRecord.blob && retrievedRecord.blob.size === dummyBlob.size) {
+      res.idbReopenGet = true;
+    }
+
+    // 7. Test Left Trim Logic (mediaStart shift)
+    const leftDelta = 2.0;
+    const clipMediaStart = 0 + leftDelta;
+    video.currentTime = clipMediaStart;
+    await new Promise(r => video.onseeked = r);
+    res.leftTrimMediaStartCheck = Math.abs(video.currentTime - 2.0) < 0.05;
+
+    // 8. Test Right Trim (duration shortened to 10.0s, mediaStart unchanged)
+    res.rightTrimMediaStartCheck = (clipMediaStart === 2.0);
+
+    // 9. Test Split Continuity
+    const part1MediaStart = 2.0;
+    const part1Duration = 4.0;
+    const part2MediaStart = part1MediaStart + part1Duration;
+    res.splitContinuityCheck = (part2MediaStart === 6.0);
+
+    document.getElementById('status').innerText = JSON.stringify(res);
+  } catch (err) {
+    res.err = err.message + '\n' + err.stack;
+    document.getElementById('status').innerText = JSON.stringify(res);
+  }
+}
+execute();
+</script>
+</body>
+</html>

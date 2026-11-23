@@ -1,0 +1,60 @@
+{
+  "step1_initial_render": {
+    "hasAppRoot": true,
+    "hasTopbar": true,
+    "hasMediaLib": true,
+    "hasPreview": true,
+    "hasTimeline": true,
+    "hasInspector": true
+  },
+  "step2_import": {
+    "cardsRendered": 6,
+    "hasMov": true,
+    "idbRecords": 1,
+    "idbFilenames": [
+      "test-sample.mov"
+    ]
+  },
+  "step3_timeline_editing": {
+    "videoRendered": true,
+    "videoDuration": null,
+    "initialSrc": "blob:http://localhost:5194/441",
+    "isPlaying": false,
+    "currentTimeAfterPlay": 0.6166000000000006,
+    "seekSucceeded": true,
+    "videoCurrentTimeAfterSeek": 3.993,
+    "timelineClipRendered": true
+  },
+  "step4_reload_persistence": {
+    "idbRecordsPersisted": 1,
+    "idbFilenames": [
+      "test-sample.mov"
+    ],
+    "cardsAfterReload": 5,
+    "cardNames": [
+      "Rainy Window",
+      "Mountain Aerial",
+      "City Night Timelapse",
+      "Golden Hour Beach",
+      "Forest Morning"
+    ]
+  },
+  "step5_audio": {
+    "hasAudioTab": true,
+    "audioCardsCount": 4,
+    "audioCardNames": [
+      "1:00\nPercussion Texture\n1:00",
+      "2:00\nStrings — Slow Build\n2:00",
+      "1:30\nCinematic Score Intro\n1:3",
+      "3:00\nAmbient — Calm Dusk\n3:00"
+    ]
+  },
+  "consoleLogs": [
+    "[debug] [vite] connecting...",
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[debug] [vite] connected.",
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  ]
+}
