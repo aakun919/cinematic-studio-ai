@@ -8,6 +8,7 @@ import type {
   Transition, TransitionType, Keyframe, AnimatableProperty, EasingType,
 } from './types.ts';
 import { mockMediaItems, mockTracks, mockTransitions, mockKeyframes } from './mockData.ts';
+import type { ProjectStateSlice } from './utils/projectFile.ts';
 
 // ─── ヘルパー ────────────────────────────────────────────────
 
@@ -134,13 +135,16 @@ export type EditorAction =
   | { type: 'SHOW_EXPORT_MODAL' }
   | { type: 'HIDE_EXPORT_MODAL' }
   | { type: 'SET_EXPORT_SETTINGS'; settings: Partial<ExportSettings> }
-  | { type: 'SET_SAVE_STATUS'; status: SaveStatus };
+  | { type: 'SET_SAVE_STATUS'; status: SaveStatus }
+  | { type: 'RESTORE_PROJECT'; slice: ProjectStateSlice }
+  | { type: 'PROJECT_RESTORE_DONE' };
 
 // ─── 初期状態 ─────────────────────────────────────────────────
 
 export const initialState: EditorState = {
   projectName: 'Summer Memories 2024',
   saveStatus: 'saved',
+  projectRestored: false,
   mediaItems: mockMediaItems,
   activeMediaTab: 'video',
   mediaSearch: '',
@@ -1263,10 +1267,43 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       return {
         ...state,
         exportSettings: { ...state.exportSettings, ...action.settings },
+        saveStatus: 'unsaved',
       };
 
     case 'SET_SAVE_STATUS':
       return { ...state, saveStatus: action.status };
+
+    case 'RESTORE_PROJECT': {
+      // 保存済みプロジェクトで編集状態を置き換える (Task 14)。
+      // 選択・再生・Undo履歴などの一時的状態はリセットする。
+      const { slice } = action;
+      return {
+        ...state,
+        projectName: slice.projectName,
+        mediaItems: slice.mediaItems,
+        tracks: slice.tracks,
+        transitions: slice.transitions,
+        keyframes: slice.keyframes,
+        exportSettings: slice.exportSettings,
+        totalDuration: slice.totalDuration,
+        currentTime: 0,
+        isPlaying: false,
+        selectedClipId: null,
+        selectedClipIds: [],
+        selectedTransitionId: null,
+        selectedKeyframeId: null,
+        selectedTrackId: null,
+        selectedGap: null,
+        past: [],
+        future: [],
+        saveStatus: 'saved',
+        projectRestored: true,
+      };
+    }
+
+    case 'PROJECT_RESTORE_DONE':
+      // 保存済みプロジェクトが無かった場合: 初期状態のまま復元完了とする
+      return { ...state, projectRestored: true };
 
     default:
       return state;

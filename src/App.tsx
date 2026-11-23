@@ -9,10 +9,14 @@ import { InspectorPanel } from './components/InspectorPanel.tsx';
 import { Timeline } from './components/Timeline.tsx';
 import { AIPanel } from './components/AIPanel.tsx';
 import { ExportModal } from './components/ExportModal.tsx';
+import { ProjectPersistence } from './components/ProjectPersistence.tsx';
 
 function MainEditor() {
   return (
     <div className="app-root">
+      {/* プロジェクト復元・自動保存 (描画なし) */}
+      <ProjectPersistence />
+
       {/* 1. Top Bar */}
       <TopBar />
 

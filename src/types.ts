@@ -127,6 +127,9 @@ export interface EditorState {
   // Project
   projectName: string;
   saveStatus: SaveStatus;
+  // 起動時のプロジェクト復元が完了したかどうか (Task 14)。
+  // false の間は自動保存を行わない (復元前の初期状態で保存済みデータを上書きしないため)
+  projectRestored: boolean;
   // Media library
   mediaItems: MediaItem[];
   activeMediaTab: MediaType;

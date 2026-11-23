@@ -1,8 +1,9 @@
 // TopBar — アプリロゴ・プロジェクト情報・ツールボタン
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useEditorStore } from '../store.ts';
-import type { EditorAction } from '../store.ts';
+import { projectStorage } from '../utils/projectStorage.ts';
+import { serializeProject } from '../utils/projectFile.ts';
 
 // ── SVG アイコン (インライン) ────────────────────────────────
 
@@ -60,6 +61,23 @@ export function TopBar() {
   const { state, dispatch } = useEditorStore();
   const { projectName, saveStatus, past, future, previewQuality, aiStatus } = state;
 
+  // ── 実保存 (Task 14): ProjectFile を IndexedDB へ書き込む ──
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  const handleSave = useCallback(async () => {
+    const snapshot = stateRef.current;
+    dispatch({ type: 'SET_SAVE_STATUS', status: 'saving' });
+    const ok = await projectStorage.saveProject(serializeProject(snapshot));
+    // 保存中にさらに編集されていた場合は 'saved' にしない (自動保存が追随する)
+    if (stateRef.current === snapshot) {
+      dispatch({ type: 'SET_SAVE_STATUS', status: ok ? 'saved' : 'unsaved' });
+    } else if (!ok) {
+      dispatch({ type: 'SET_SAVE_STATUS', status: 'unsaved' });
+    }
+  }, [dispatch]);
+
   // ── キーボードショートカット ──
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const isMac = navigator.platform.toUpperCase().includes('MAC');
@@ -74,9 +92,9 @@ export function TopBar() {
       dispatch({ type: 'REDO' });
     } else if (e.key === 's') {
       e.preventDefault();
-      handleSave(dispatch);
+      void handleSave();
     }
-  }, [dispatch]);
+  }, [dispatch, handleSave]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -235,7 +253,3 @@ export function TopBar() {
   );
 }
 
-function handleSave(dispatch: (a: EditorAction) => void) {
-  dispatch({ type: 'SET_SAVE_STATUS', status: 'saving' });
-  setTimeout(() => dispatch({ type: 'SET_SAVE_STATUS', status: 'saved' }), 800);
-}
