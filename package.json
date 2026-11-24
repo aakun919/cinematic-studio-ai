@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test src/utils/interpolation.test.ts src/utils/mediaManager.test.ts src/utils/mediaAudit.test.ts src/utils/projectFile.test.ts"
+    "test": "node --experimental-strip-types --test src/utils/interpolation.test.ts src/utils/mediaManager.test.ts src/utils/mediaAudit.test.ts src/utils/projectFile.test.ts src/utils/audioEngine.test.ts"
   },
   "dependencies": {
     "react": "^19.3.1",

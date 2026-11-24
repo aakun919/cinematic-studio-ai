@@ -10,12 +10,16 @@ import { Timeline } from './components/Timeline.tsx';
 import { AIPanel } from './components/AIPanel.tsx';
 import { ExportModal } from './components/ExportModal.tsx';
 import { ProjectPersistence } from './components/ProjectPersistence.tsx';
+import { AudioPlayback } from './components/AudioPlayback.tsx';
 
 function MainEditor() {
   return (
     <div className="app-root">
       {/* プロジェクト復元・自動保存 (描画なし) */}
       <ProjectPersistence />
+
+      {/* 音声再生・同期 (描画なし) */}
+      <AudioPlayback />
 
       {/* 1. Top Bar */}
       <TopBar />
