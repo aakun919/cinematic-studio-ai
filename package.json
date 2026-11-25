@@ -8,9 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test src/utils/interpolation.test.ts src/utils/mediaManager.test.ts src/utils/mediaAudit.test.ts src/utils/projectFile.test.ts src/utils/audioEngine.test.ts"
+    "test": "node --experimental-strip-types --test src/utils/interpolation.test.ts src/utils/mediaManager.test.ts src/utils/mediaAudit.test.ts src/utils/projectFile.test.ts src/utils/audioEngine.test.ts src/utils/frameState.test.ts src/utils/exportPlan.test.ts src/utils/audioMixdown.test.ts"
   },
   "dependencies": {
+    "mediabunny": "^1.66.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
